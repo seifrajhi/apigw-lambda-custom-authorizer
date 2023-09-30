@@ -1,0 +1,76 @@
+service: demo-auth-lambda-apigateway
+
+plugins:
+  - serverless-better-credentials
+  - serverless-offline
+  - serverless-python-requirements
+
+custom:
+  serverless-offline:
+    httpPort: 4000
+  pythonRequirements:
+    pythonBin: python3
+  defaultStage: dev
+  stages:
+    - dev
+    - prod
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: eu-west-1
+  stage: dev
+  logRetentionInDays: 7
+  apiGateway:
+    apiKeys:
+      - name: ${env:API_GATEWAY_KEY_NAME}
+        value: ${env:API_GATEWAY_KEY_VALUE}
+  stackTags:
+    application: demo-auth-lambda-apigateway
+  tags:
+    application: auth
+
+
+  iam:
+    role:
+      statements:
+      - Effect: Allow
+        Action:
+          - apigateway:GET
+        Resource: "*"
+
+
+functions:
+  chronos:
+    handler: handler.hello_world
+    memorySize: 128 # in MB
+    events:
+      - http:
+          path: chronos
+          method: post
+          cors:
+            headers: '*'
+            origins: '*'
+          private: true
+          authorizer:
+            name: authorizerFunc
+            resultTtlInSeconds: 0
+            identitySource: method.request.header.Authorization
+            type: request
+  authorizerFunc:
+    handler: basicAuth.auth
+
+resources:
+  Resources:
+    GatewayResponse:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+          gatewayresponse.header.WWW-Authenticate: "'Basic'"
+        ResponseType: UNAUTHORIZED
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '401'

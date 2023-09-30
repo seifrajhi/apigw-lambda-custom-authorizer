@@ -1,0 +1,14 @@
+{
+    "name": "lambda-authorizer-apigw",
+    "version": "0.0.1",
+    "description": "Deploy an Amazon API Gateway REST API endpoint that uses a Lambda Token Authorizer for access control",
+    "author": "",
+    "license": "",
+    "devDependencies": {
+      "serverless-better-credentials": "^1.2.1",
+      "serverless-offline": "^9.1.5",
+      "serverless-python-requirements": "^5.4.0",
+      "serverless-step-functions": "^3.8.0"
+    }
+  }
+  
